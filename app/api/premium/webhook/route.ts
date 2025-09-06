@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/database';
+import { sendPaymentConfirmationEmail, PaymentConfirmationEmailData } from '@/lib/email';
 
 interface WebhookPayload {
   id: string;
@@ -106,6 +105,31 @@ async function activatePremiumAccessViaWebhook(pixId: string, statusData: Webhoo
       pixId: pixId
     });
 
+    // Enviar email de confirmação
+    try {
+      const emailData: PaymentConfirmationEmailData = {
+        userEmail: pixPayment.userEmail,
+        userName: pixPayment.user?.name || 'Usuário',
+        planName: getPlanName(pixPayment.planId),
+        planDuration: `${getPlanDurationInDays(pixPayment.planId)} dias`,
+        expireDate: formatDate(expireDate),
+        telegramChannel: process.env.TELEGRAM_CHANNEL || 'https://t.me/amadorflixvip',
+        telegramBot: process.env.TELEGRAM_BOT || 'https://t.me/amadorflixbot',
+        loginUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login`
+      };
+
+      const emailSent = await sendPaymentConfirmationEmail(emailData);
+      
+      if (emailSent) {
+        console.log('Email de confirmação enviado com sucesso para:', pixPayment.userEmail);
+      } else {
+        console.error('Falha ao enviar email de confirmação para:', pixPayment.userEmail);
+      }
+    } catch (emailError) {
+      console.error('Erro ao enviar email de confirmação:', emailError);
+      // Não falhar o webhook por causa do email
+    }
+
     return true;
   } catch (error) {
     console.error('Erro ao ativar acesso premium via webhook:', error);
@@ -125,6 +149,29 @@ function getPlanDurationInDays(planId: string): number {
     default:
       return 30;
   }
+}
+
+// Função para obter nome do plano
+function getPlanName(planId: string): string {
+  switch (planId) {
+    case '12months':
+      return 'Plano Anual (12 meses)';
+    case '1month':
+      return 'Plano Mensal (1 mês)';
+    case '7days':
+      return 'Plano Semanal (7 dias)';
+    default:
+      return 'Plano Mensal (1 mês)';
+  }
+}
+
+// Função para formatar data
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
 }
 
 export async function POST(request: NextRequest) {
