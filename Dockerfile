@@ -16,8 +16,8 @@ RUN npm ci
 # Copiar código fonte
 COPY . .
 
-# Gerar Prisma client
-RUN npx prisma generate
+# Gerar Prisma clients (ambos os bancos)
+RUN npx prisma generate && npx prisma generate --schema=./prisma/schema-videos.prisma
 
 # Build da aplicação
 RUN npm run build
