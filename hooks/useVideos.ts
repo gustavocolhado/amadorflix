@@ -54,6 +54,7 @@ export function useVideos(params: UseVideosParams = {}) {
   const fetchVideos = useCallback(async () => {
     try {
       setLoading(true)
+      setError(null)
       
       // Construir query params
       const queryParams = new URLSearchParams({
@@ -81,11 +82,30 @@ export function useVideos(params: UseVideosParams = {}) {
       
       const data: VideosResponse = await response.json()
       
-      setVideos(data.videos)
-      setPagination(data.pagination)
-      setError(null)
+      // Verificar se a resposta tem a estrutura esperada
+      if (data && data.videos && Array.isArray(data.videos)) {
+        setVideos(data.videos)
+        setPagination(data.pagination || {
+          page: 1,
+          limit: 12,
+          total: 0,
+          totalPages: 0,
+          hasMore: false
+        })
+      } else {
+        // Fallback: se a resposta não tem a estrutura esperada
+        setVideos([])
+        setPagination({
+          page: 1,
+          limit: 12,
+          total: 0,
+          totalPages: 0,
+          hasMore: false
+        })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido')
+      setVideos([]) // Garantir que videos seja sempre um array
       console.error('Erro ao buscar vídeos:', err)
     } finally {
       setLoading(false)

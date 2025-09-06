@@ -102,7 +102,7 @@ export default function VideoSection() {
 
       {/* Video Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {videos.map((video) => (
+        {videos && videos.length > 0 ? videos.map((video) => (
           <VideoCard
             key={video.id}
             id={video.id}
@@ -119,7 +119,7 @@ export default function VideoSection() {
             creator={video.creator || undefined}
             onClick={handleVideoClick}
           />
-        ))}
+        )) : null}
       </div>
 
       {/* Loading State */}
@@ -152,7 +152,7 @@ export default function VideoSection() {
       )}
 
       {/* No Videos Message */}
-      {!loading && videos.length === 0 && !error && (
+      {!loading && (!videos || videos.length === 0) && !error && (
         <div className="text-center py-12">
           <Plus className="w-16 h-16 text-theme-muted mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-theme-secondary mb-2">
