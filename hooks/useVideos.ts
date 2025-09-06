@@ -1,38 +1,115 @@
-import { useState, useEffect } from 'react'
-import { prismaVideos } from '@/lib/database'
+import { useState, useEffect, useCallback } from 'react'
 
-// Hook para gerenciar vídeos do banco de vídeos
-export function useVideos() {
-  const [videos, setVideos] = useState([])
+interface Video {
+  id: string
+  title: string
+  description: string | null
+  url: string
+  videoUrl: string
+  viewCount: number
+  likesCount: number
+  thumbnailUrl: string
+  duration: number | null
+  premium: boolean
+  iframe: boolean
+  trailerUrl: string | null
+  category: string[]
+  creator: string | null
+  created_at: string | null
+}
+
+interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasMore: boolean
+}
+
+interface VideosResponse {
+  videos: Video[]
+  pagination: Pagination
+}
+
+interface UseVideosParams {
+  filter?: 'recent' | 'popular' | 'liked' | 'long' | 'random'
+  search?: string
+  category?: string
+  page?: number
+}
+
+// Hook para gerenciar vídeos do banco de vídeos com paginação
+export function useVideos(params: UseVideosParams = {}) {
+  const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 0,
+    hasMore: false
+  })
+
+  const fetchVideos = useCallback(async () => {
+    try {
+      setLoading(true)
+      
+      // Construir query params
+      const queryParams = new URLSearchParams({
+        page: (params.page || 1).toString(),
+        limit: '12'
+      })
+
+      if (params.filter) {
+        queryParams.append('filter', params.filter)
+      }
+
+      if (params.search) {
+        queryParams.append('search', params.search)
+      }
+
+      if (params.category) {
+        queryParams.append('category', params.category)
+      }
+
+      const response = await fetch(`/api/videos?${queryParams.toString()}`)
+      
+      if (!response.ok) {
+        throw new Error('Erro ao buscar vídeos')
+      }
+      
+      const data: VideosResponse = await response.json()
+      
+      setVideos(data.videos)
+      setPagination(data.pagination)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+      console.error('Erro ao buscar vídeos:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [params.filter, params.search, params.category, params.page])
 
   useEffect(() => {
-    async function fetchVideos() {
-      try {
-        setLoading(true)
-        // Exemplo de uso do banco de vídeos
-        const response = await fetch('/api/videos')
-        const data = await response.json()
-        setVideos(data)
-      } catch (err) {
-        setError(err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchVideos()
-  }, [])
+  }, [fetchVideos])
 
-  return { videos, loading, error }
+  return { 
+    videos, 
+    loading, 
+    error, 
+    pagination, 
+    refetch: fetchVideos 
+  }
 }
 
 // Hook para gerenciar criadores do banco de vídeos
 export function useCreators() {
   const [creators, setCreators] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchCreators() {
@@ -43,7 +120,7 @@ export function useCreators() {
         const data = await response.json()
         setCreators(data)
       } catch (err) {
-        setError(err)
+        setError(err instanceof Error ? err.message : 'Erro desconhecido')
       } finally {
         setLoading(false)
       }

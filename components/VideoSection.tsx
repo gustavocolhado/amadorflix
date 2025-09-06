@@ -17,7 +17,6 @@ export default function VideoSection() {
   
   const { videos, pagination, loading, error, refetch } = useVideos({
     page: currentPage,
-    limit: 20,
     filter: sortBy,
     category: selectedCategory || undefined
   })

@@ -13,13 +13,6 @@ export async function GET(
     const video = await prismaVideos.video.findUnique({
       where: { url },
       include: {
-        User: {
-          select: {
-            id: true,
-            name: true,
-            username: true
-          }
-        },
         videoTags: {
           include: {
             tag: {
@@ -58,7 +51,7 @@ export async function GET(
       dislikesCount: 0, // Campo não existe no schema
       category: video.category, // Já é um array de strings
       creator: video.creator,
-      uploader: video.User,
+      uploader: null, // Usuário não está mais no banco de vídeos
       uploadTime: video.created_at ? new Date(video.created_at).toLocaleDateString('pt-BR') : 'Data desconhecida',
       description: video.description,
       tags: video.videoTags.map(vt => vt.tag.name)
