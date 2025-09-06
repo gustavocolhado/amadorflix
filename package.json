@@ -1,0 +1,46 @@
+{
+  "name": "cornosbrasilnew",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "prisma generate && prisma generate --schema=./prisma/schema-videos.prisma",
+    "db:push": "prisma db push && prisma db push --schema=./prisma/schema-videos.prisma",
+    "db:migrate": "prisma migrate dev && prisma migrate dev --schema=./prisma/schema-videos.prisma",
+    "db:studio": "prisma studio",
+    "db:studio:videos": "prisma studio --schema=./prisma/schema-videos.prisma",
+    "db:test": "node scripts/test-dual-database.js",
+    "db:migrate-data": "node scripts/migrate-to-dual-database.js"
+  },
+  "dependencies": {
+    "@next-auth/prisma-adapter": "^1.0.7",
+    "@stripe/stripe-js": "^4.8.0",
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
+    "hls.js": "^1.6.7",
+    "lucide-react": "^0.263.1",
+    "mercadopago": "^2.8.0",
+    "next": "14.0.0",
+    "next-auth": "^4.24.11",
+    "prisma": "^6.13.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-icons": "^5.5.0",
+    "stripe": "17.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/stripe": "^8.0.417",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5"
+  }
+}

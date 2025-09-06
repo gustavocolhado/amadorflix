@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+
+model Account {
+  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String  @db.ObjectId
+  type               String
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refresh_token      String? @db.String
+  access_token       String? @db.String
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.String
+  session_state      String?
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+ 
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@map("sessions")
+}
+ 
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  username      String?
+  email         String?   @unique
+  password      String? 
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  role          String    @default("user") // user, admin, moderator
+  accounts      Account[]
+  sessions      Session[]
+
+  resetToken          String?  // Campo opcional para o token de redefinição
+  resetTokenExpiration DateTime? // Campo opcional para a expiração do token
+  access        Int  @default(0)
+  premium       Boolean  @default(false)
+  paymentId     Int?
+  preferenceId  String?
+  paymentQrCodeUrl String?
+  paymentStatus String?
+  paymentType   String?
+  promotionId   String?
+  affiliateId   String?  @db.ObjectId // ID do afiliado (usuário que indicou)
+  chavePix      String?
+  promotionCode String?
+  signupSource  String?  // Adicionando o campo signupSource
+  
+  // Campos de referência para tracking
+  referralSource    String?  // Fonte da referência (ex: pornocarioca.com)
+  referralCampaign  String?  // Campanha (ex: xclickads)
+  referralReferrer  String?  // URL completa do referrer
+  referralTimestamp String?  // Timestamp da captura da referência
+
+  created_at    DateTime? @default(now())
+  update_at     DateTime? @default(now())
+
+  paymentDate   DateTime?
+  expireDate    DateTime?
+
+  payments      Payment[]
+  affiliateSales Affiliate[] @relation("AffiliateSales") // Relacionamento com vendas de afiliado
+  referredUsers Affiliate[] @relation("ReferredUsers") // Relacionamento com usuários indicados
+  withdrawalRequests WithdrawalRequest[] @relation("WithdrawalAffiliate")
+  promotions  Promotion[]  // Um usuário pode ter várias promoções
+  pixPayments PixPayment[] // Relacionamento com pagamentos PIX
+
+  @@map("users")
+}
+
+model Promotion {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?        @db.ObjectId // ID do usuário que usou a promoção (opcional)
+  slug      String         @unique // Identificador único para a URL da promoção
+  plan         String
+  name      String         // Nome da promoção para exibição
+  amount       Float
+  status    PromotionStatus // Enum para status da promoção (ex.: "ATIVA", "EXPIRADA")
+  paymentId Int?           // ID de referência do pagamento, se houver
+  createdAt DateTime       @default(now()) // Data de criação da promoção
+
+  // Relacionamento
+  user      User?          @relation(fields: [userId], references: [id])
+
+  @@map("promotions") // Nome da tabela no banco de dados
+}
+
+enum PromotionStatus {
+  ATIVA
+  EXPIRADA
+}
+
+
+model Affiliate {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId // Usuário que comprou
+  affiliateId  String   @db.ObjectId // Usuário que indicou
+  amount       Float    // Valor da venda
+  commission   Float    // Comissão para o afiliado
+  status       String   // Status da venda (pago, pendente, etc.)
+  paymentId    Int?
+  created_at   DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id], name: "AffiliateSales")
+  affiliate    User     @relation(fields: [affiliateId], references: [id], name: "ReferredUsers")
+
+  @@map("affiliates")
+}
+
+model WithdrawalRequest {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  affiliateId  String   @db.ObjectId
+  amount       Float
+  status       String   // Status do saque (pendente, aprovado, rejeitado)
+  created_at   DateTime @default(now())
+
+  affiliate    User     @relation(fields: [affiliateId], references: [id], name: "WithdrawalAffiliate")
+
+  @@map("withdrawal_requests")
+}
+
+model Payment {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  plan         String
+  amount       Float
+  transactionDate DateTime @default(now())
+  userEmail    String
+  status       String
+  paymentId    Int?
+  duration     Int?
+  promotionCode String?
+  preferenceId     String?
+  affiliateId  String?
+
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@map("payments")
+}
+
+model PixPayment {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  pixId                 String   @unique // ID do PIX da PushinPay
+  userId                String?  @db.ObjectId // Pode ser null se usuário não existir ainda
+  userEmail             String   // Email do usuário
+  planId                String   // ID do plano selecionado
+  amount                Float    // Valor em reais
+  status                String   @default("pending") // pending, paid, expired, failed
+  qrCode                String   // Código QR do PIX
+  qrCodeBase64          String   // QR Code em base64
+  endToEndId            String?  // ID do PIX após pagamento
+  payerName             String?  // Nome do pagador
+  payerDocument         String?  // CPF/CNPJ do pagador
+  expiresAt             DateTime // Data de expiração do PIX
+  paidAt                DateTime? // Data do pagamento
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  metadata              Json?    // Metadados adicionais (referência, etc.)
+
+  user                  User?    @relation(fields: [userId], references: [id])
+  
+  @@map("pix_payments")
+}
+
+model PaymentSession {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  plan       String
+  amount     Float
+  userId     String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  paymentId  Int?     // Adicionar este campo para vincular ao Payment
+  preferenceId     String?
+}
+
+
+ 
+model VerificationToken {
+  identifier String @id @default(auto()) @map("_id") @db.ObjectId
+  token      String @unique
+  expires    DateTime
+ 
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
