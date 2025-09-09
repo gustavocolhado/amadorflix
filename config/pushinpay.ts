@@ -10,12 +10,18 @@ function loadEnvironmentVariables() {
 // Carregar variáveis de ambiente
 loadEnvironmentVariables();
 
+// Interface para conta de split
+interface SplitAccount {
+  accountId: string;
+  percentage: number;
+  description?: string;
+}
+
 // Interface para a configuração
 interface PushinPayConfig {
   TOKEN: string | undefined;
   WEBHOOK_URL: string | undefined;
-  SPLIT_ACCOUNT_ID: string;
-  SPLIT_PERCENTAGE: number;
+  SPLIT_ACCOUNTS: SplitAccount[];
   MAIN_PERCENTAGE: number;
   API_URL: string;
   HEADERS: {
@@ -41,6 +47,20 @@ export function getPUSHINPAY_CONFIG(): PushinPayConfig {
   // porque o token não tem acesso ao sandbox
   const useProductionAPI = true; // Forçar uso da API de produção
   
+  // Configurar contas de split (2 contas: 50% cada)
+  const splitAccounts: SplitAccount[] = [
+    {
+      accountId: process.env.PUSHINPAY_SPLIT_ACCOUNT_ID || '9F64A5B8-47CB-4969-A85C-D380100225F9',
+      percentage: 0.50, // 50% para a conta de split
+      description: 'Conta de Split'
+    }
+    // A conta principal (PUSHINPAY_TOKEN) receberá automaticamente 50%
+  ];
+
+  // Calcular porcentagem da conta principal
+  const totalSplitPercentage = splitAccounts.reduce((sum, account) => sum + account.percentage, 0);
+  const mainPercentage = 1 - totalSplitPercentage;
+
   return {
     // Token de autenticação
     TOKEN: token,
@@ -48,12 +68,11 @@ export function getPUSHINPAY_CONFIG(): PushinPayConfig {
     // URL do webhook para notificações
     WEBHOOK_URL: process.env.PUSHINPAY_WEBHOOK_URL,
     
-    // ID da conta para split
-    SPLIT_ACCOUNT_ID: process.env.PUSHINPAY_SPLIT_ACCOUNT_ID || '9F64A5B8-47CB-4969-A85C-D380100225F9',
+    // Contas de split configuradas
+    SPLIT_ACCOUNTS: splitAccounts,
     
-    // Configurações de split (50% para cada conta)
-    SPLIT_PERCENTAGE: 0.50, // 50% para a conta de split
-    MAIN_PERCENTAGE: 0.50,  // 50% para a conta principal
+    // Porcentagem da conta principal (calculada automaticamente)
+    MAIN_PERCENTAGE: mainPercentage,
     
     // URL da API (sempre produção por enquanto)
     API_URL: useProductionAPI 
@@ -84,15 +103,26 @@ export const PUSHINPAY_CONFIG = getPUSHINPAY_CONFIG();
 // Função para calcular valores do split
 export function calculateSplitValues(totalValue: number) {
   const config = getPUSHINPAY_CONFIG();
-  const splitValue = Math.round(totalValue * config.SPLIT_PERCENTAGE);
-  const mainValue = totalValue - splitValue;
+  
+  // Calcular valores para cada conta de split
+  const splitValues = config.SPLIT_ACCOUNTS.map(account => ({
+    accountId: account.accountId,
+    value: Math.round(totalValue * account.percentage),
+    percentage: account.percentage,
+    description: account.description
+  }));
+  
+  // Calcular valor total das contas de split
+  const totalSplitValue = splitValues.reduce((sum, split) => sum + split.value, 0);
+  const mainValue = totalValue - totalSplitValue;
   
   return {
     totalValue,
     mainValue,
-    splitValue,
-    splitPercentage: config.SPLIT_PERCENTAGE,
-    mainPercentage: config.MAIN_PERCENTAGE
+    splitValues,
+    totalSplitValue,
+    mainPercentage: config.MAIN_PERCENTAGE,
+    totalSplitPercentage: config.SPLIT_ACCOUNTS.reduce((sum, account) => sum + account.percentage, 0)
   };
 }
 
@@ -119,17 +149,14 @@ export function validateValue(value: number): { isValid: boolean; error?: string
 
 // Função para criar payload do split
 export function createSplitPayload(value: number, webhookUrl?: string) {
-  const config = getPUSHINPAY_CONFIG();
-  const { splitValue } = calculateSplitValues(value);
+  const { splitValues } = calculateSplitValues(value);
   
   const payload: any = {
     value: value,
-    split_rules: [
-      {
-        value: splitValue,
-        account_id: config.SPLIT_ACCOUNT_ID
-      }
-    ]
+    split_rules: splitValues.map(split => ({
+      value: split.value,
+      account_id: split.accountId
+    }))
   };
   
   if (webhookUrl) {

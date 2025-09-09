@@ -120,19 +120,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Calcular valores do split
-    const { mainValue, splitValue } = calculateSplitValues(value);
+    const { mainValue, splitValues, totalSplitValue, totalSplitPercentage } = calculateSplitValues(value);
     
     // Preparar payload para PushinPay
     const pushinPayPayload = createSplitPayload(value, PUSHINPAY_CONFIG.WEBHOOK_URL);
 
     // Log do payload para debug
-    console.log('Payload PushinPay com split simples:', {
+    console.log('Payload PushinPay com split configurado:', {
       value,
       split_rules: pushinPayPayload.split_rules,
-      split_account_id: PUSHINPAY_CONFIG.SPLIT_ACCOUNT_ID,
+      split_accounts: PUSHINPAY_CONFIG.SPLIT_ACCOUNTS,
       main_value: mainValue,
-      split_value: splitValue,
-      total_split_percentage: 0.50 // 50% para cada conta
+      split_values: splitValues,
+      total_split_value: totalSplitValue,
+      total_split_percentage: totalSplitPercentage
     });
 
     // Fazer requisição para PushinPay
@@ -223,8 +224,8 @@ export async function POST(request: NextRequest) {
       planId,
       value: value / 100,
       mainValue: mainValue / 100,
-      splitValue: splitValue / 100,
-      splitAccountId: PUSHINPAY_CONFIG.SPLIT_ACCOUNT_ID,
+      splitValue: totalSplitValue / 100,
+      splitAccountId: PUSHINPAY_CONFIG.SPLIT_ACCOUNTS[0]?.accountId || '',
       status: 'pending',
       splitRules: pixData.split_rules,
       referralData: referralData ? {
