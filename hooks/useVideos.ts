@@ -36,6 +36,7 @@ interface UseVideosParams {
   search?: string
   category?: string
   page?: number
+  limit?: number
 }
 
 // Hook para gerenciar vídeos do banco de vídeos com paginação
@@ -59,7 +60,7 @@ export function useVideos(params: UseVideosParams = {}) {
       // Construir query params
       const queryParams = new URLSearchParams({
         page: (params.page || 1).toString(),
-        limit: '12'
+        limit: (params.limit || 12).toString()
       })
 
       if (params.filter) {

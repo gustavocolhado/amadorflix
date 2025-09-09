@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Heart, Star } from 'lucide-react'
+import { Heart, Star, User } from 'lucide-react'
 import { useVideoActions } from '@/hooks/useVideoActions'
 
 interface VideoCardProps {
@@ -18,6 +18,7 @@ interface VideoCardProps {
   likesCount?: number
   category?: string[]
   creator?: string
+  creatorId?: string
   uploader?: {
     id: string
     name: string
@@ -39,6 +40,7 @@ export default function VideoCard({
   likesCount = 0, 
   category = [], 
   creator, 
+  creatorId,
   uploader, 
   onClick 
 }: VideoCardProps) {
@@ -84,6 +86,13 @@ export default function VideoCard({
     toggleFavorite()
   }
 
+  const handleCreatorClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (creatorId) {
+      router.push(`/creators/${creatorId}`)
+    }
+  }
+
   const handleMouseEnter = () => {
     if (isIframe && trailerUrl) {
       setShowTrailer(true)
@@ -98,12 +107,12 @@ export default function VideoCard({
 
   return (
     <div 
-      className="group cursor-pointer" 
+      className="group cursor-pointer bg-white dark:bg-[#111] shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden" 
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="relative aspect-video theme-card rounded-lg overflow-hidden">
+      <div className="relative aspect-video overflow-hidden">
         {/* Trailer (se iframe e mouse sobre) */}
         {showTrailer && isIframe && trailerUrl && (
           <div className="absolute inset-0 z-10">
@@ -198,30 +207,45 @@ export default function VideoCard({
         </div>
       </div>
       
-      {/* Title */}
-      <h3 className="text-sm text-theme-primary mt-2 line-clamp-2 group-hover:text-accent-red transition-colors">
-        {title}
-      </h3>
-      
-      {/* Creator Info */}
-      {(creator || uploader) && (
-        <p className="text-xs text-theme-secondary mt-1">
-          {uploader?.name || uploader?.username || creator}
-        </p>
-      )}
-      
-      {/* Stats */}
-      <div className="flex items-center space-x-2 mt-1">
-        {viewCount > 0 && (
-          <span className="text-xs text-theme-secondary">
-            {viewCount.toLocaleString()} views
-          </span>
+      {/* Card Content */}
+      <div className="p-3">
+        {/* Title */}
+        <h3 className="text-md text-theme-primary line-clamp-2 group-hover:text-accent-red transition-colors mb-2 font-bold">
+          {title}
+        </h3>
+        
+        {/* Creator Info */}
+        {(creator || uploader) && (
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-theme-secondary">
+              {uploader?.name || uploader?.username || creator}
+            </p>
+            {creatorId && (
+              <button
+                onClick={handleCreatorClick}
+                className="flex items-center gap-1 text-sm text-accent-red hover:text-accent-red-dark transition-colors"
+                title="Ver criador"
+              >
+                <User className="w-3 h-3" />
+                <span>Ver criador</span>
+              </button>
+            )}
+          </div>
         )}
-        {likesCount > 0 && (
-          <span className="text-xs text-theme-secondary">
-            {likesCount.toLocaleString()} likes
-          </span>
-        )}
+        
+        {/* Stats */}
+        <div className="flex items-center space-x-2">
+          {viewCount > 0 && (
+            <span className="text-xs text-theme-secondary">
+              {viewCount.toLocaleString()} views
+            </span>
+          )}
+          {likesCount > 0 && (
+            <span className="text-xs text-theme-secondary">
+              {likesCount.toLocaleString()} likes
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

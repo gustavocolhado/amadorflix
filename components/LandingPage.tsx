@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { FaFire, FaPlay, FaEye, FaHeart, FaClock, FaUsers, FaVideo, FaSearch, FaCrown, FaTags, FaThLarge, FaComments, FaUpload, FaPlus, FaUserCircle, FaCheck, FaArrowRight, FaCopy, FaSpinner, FaTimes, FaUnlock, FaShieldAlt, FaMobile, FaCalendarAlt, FaHeadphones, FaChevronLeft, FaChevronRight, FaLock } from 'react-icons/fa';
@@ -47,6 +47,16 @@ export default function LandingPage() {
     referrer: string;
   } | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Função para alternar o som do vídeo
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
 
   // Capturar dados de referência quando a página carregar
   useEffect(() => {
@@ -461,25 +471,47 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-black to-gray-900 py-20 overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <Image 
-            src="/imgs/bg.jpg" 
-            alt="Background" 
-            fill 
-            className="object-cover"
-            priority
-          />
+      <section className="relative bg-gradient-to-b from-black to-gray-900 py-20 overflow-hidden h-[500px]">
+        {/* Background Video */}
+        <div className="absolute inset-0 ">
+          <video 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            className="w-full h-full object-cover"
+            ref={videoRef}
+          >
+            <source src="/cta.mp4" type="video/mp4" />
+            Seu navegador não suporta vídeos.
+          </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80"></div>
         </div>
         
+        {/* Video Overlay - Click to Unmute */}
+        {isMuted && (
+          <div 
+            className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
+            onClick={toggleMute}
+          >
+            <div className="bg-black/50 backdrop-blur-sm rounded-full p-6 hover:bg-black/70 transition-all duration-300">
+              <div className="flex items-center space-x-3 text-white">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L5.5 14H3a1 1 0 01-1-1V7a1 1 0 011-1h2.5l2.883-2.793a1 1 0 011.617.793zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.983 5.983 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.984 3.984 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                </svg>
+                <span className="text-lg font-medium">Clique para ativar o som</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
+        
+      </section>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 text-center mb-10">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            <span className="text-white">Amador</span>
-            <span className="text-red-500 font-extrabold">Flix</span>
-            <span className="text-white">.com apresenta:</span>
+            <span className="text-red-500 font-extrabold">Assine Agora</span>
           </h1>
           
           <h2 className="text-2xl md:text-4xl font-bold mb-8">
@@ -498,7 +530,6 @@ export default function LandingPage() {
             </button>
           </div>
         </div>
-      </section>
 
       {/* Seção de Benefícios */}
       <section className="py-16">

@@ -11,12 +11,13 @@ import { formatDuration } from '@/utils/formatDuration'
 
 export default function VideoSection() {
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'liked'>('recent')
+  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'liked' | 'random'>('random')
   const [currentPage, setCurrentPage] = useState(1)
   const router = useRouter()
   
   const { videos, pagination, loading, error, refetch } = useVideos({
     page: currentPage,
+    limit: 20,
     filter: sortBy,
     category: selectedCategory || undefined
   })
@@ -33,7 +34,7 @@ export default function VideoSection() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleSortChange = (newSort: 'recent' | 'popular' | 'liked') => {
+  const handleSortChange = (newSort: 'recent' | 'popular' | 'liked' | 'random') => {
     setSortBy(newSort)
     setCurrentPage(1) // Reset para primeira página ao mudar filtro
   }
@@ -44,11 +45,22 @@ export default function VideoSection() {
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
           <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <h2 className="text-xl md:text-2xl font-bold text-theme-primary">NOVOS VIDEOS</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-theme-primary">VÍDEOS EM DESTAQUE</h2>
             <Plus className="text-accent-red" size={20} />
           </div>
           
                      <div className="flex items-center space-x-4 overflow-x-auto pb-2">
+             <button 
+               onClick={() => handleSortChange('random')}
+               className={`flex items-center space-x-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                 sortBy === 'random' 
+                   ? 'bg-accent-red text-white' 
+                   : 'bg-theme-hover text-theme-primary'
+               }`}
+             >
+               <span className="text-sm">ALEATÓRIOS</span>
+             </button>
+             
              <button 
                onClick={() => handleSortChange('recent')}
                className={`flex items-center space-x-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
@@ -57,7 +69,7 @@ export default function VideoSection() {
                    : 'bg-theme-hover text-theme-primary'
                }`}
              >
-               <span className="text-sm">VIDEOS RECENTES</span>
+               <span className="text-sm">RECENTES</span>
              </button>
              
              <button 
@@ -101,8 +113,8 @@ export default function VideoSection() {
       )}
 
       {/* Video Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {videos && videos.length > 0 ? videos.map((video) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+        {videos.map((video) => (
           <VideoCard
             key={video.id}
             id={video.id}
@@ -119,7 +131,7 @@ export default function VideoSection() {
             creator={video.creator || undefined}
             onClick={handleVideoClick}
           />
-        )) : null}
+        ))}
       </div>
 
       {/* Loading State */}
@@ -152,7 +164,7 @@ export default function VideoSection() {
       )}
 
       {/* No Videos Message */}
-      {!loading && (!videos || videos.length === 0) && !error && (
+      {!loading && videos.length === 0 && !error && (
         <div className="text-center py-12">
           <Plus className="w-16 h-16 text-theme-muted mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-theme-secondary mb-2">
