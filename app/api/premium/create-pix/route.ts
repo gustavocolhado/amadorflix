@@ -62,15 +62,31 @@ function getPlanDuration(planId: string): number {
   }
 }
 
-// Função para verificar se usuário existe (não criar automaticamente)
+// Função para verificar se usuário existe ou criar se não existir
 async function checkUserExists(email: string) {
   try {
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { email }
     });
+
+    // Se usuário não existe, criar sem senha
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: email,
+          name: email.split('@')[0], // Usar parte antes do @ como nome
+          password: '', // Senha vazia, será definida após pagamento
+          premium: false,
+          paymentStatus: 'pending',
+          paymentType: 'pix'
+        }
+      });
+      console.log('✅ Usuário criado sem senha:', { id: user.id, email: user.email });
+    }
+
     return user;
   } catch (error) {
-    console.error('Erro ao verificar usuário:', error);
+    console.error('Erro ao verificar/criar usuário:', error);
     throw error;
   }
 }
@@ -180,7 +196,7 @@ export async function POST(request: NextRequest) {
       hasQrCodeBase64: !!pixData.qr_code_base64
     });
 
-    // Verificar se usuário existe (não criar automaticamente)
+    // Verificar se usuário existe ou criar se não existir
     const existingUser = await checkUserExists(email);
 
     // Salvar dados do PIX no banco de dados
@@ -228,7 +244,7 @@ export async function POST(request: NextRequest) {
 
     console.log('PIX criado com split simples e salvo no banco:', {
       pixId: pixData.id,
-      userId: existingUser?.id || 'usuário não existe ainda',
+      userId: existingUser.id,
       email,
       planId,
       value: value / 100,
@@ -253,7 +269,7 @@ export async function POST(request: NextRequest) {
       status: pixData.status,
       value: pixData.value,
       qr_code_base64: pixData.qr_code_base64,
-      userId: existingUser?.id || null,
+      userId: existingUser.id,
     });
 
   } catch (error) {

@@ -11,6 +11,7 @@ interface PixPaymentWithAutoCheckProps {
     qr_code: string
     value: number
     qr_code_base64: string
+    userId?: string
   }
   userEmail: string
   onClose: () => void
@@ -28,6 +29,11 @@ export default function PixPaymentWithAutoCheck({
   const [isCheckingPayment, setIsCheckingPayment] = useState(false)
   const [checkCount, setCheckCount] = useState(0)
   const [timeLeft, setTimeLeft] = useState(15 * 60) // 15 minutos
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isFinalizing, setIsFinalizing] = useState(false)
+  const [finalizeError, setFinalizeError] = useState('')
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -91,8 +97,8 @@ export default function PixPaymentWithAutoCheck({
         clearInterval(checkIntervalRef.current!)
         clearInterval(intervalRef.current!)
         
-        // Login automático após confirmação
-        await handleAutoLogin()
+        // Mostrar formulário de senha após confirmação
+        setShowPasswordForm(true)
       }
     } catch (error) {
       console.error('Erro ao verificar pagamento:', error)
@@ -101,25 +107,65 @@ export default function PixPaymentWithAutoCheck({
     }
   }
 
-  const handleAutoLogin = async () => {
+  const handleFinalizeAccount = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!pixData.userId) {
+      setFinalizeError('ID do usuário não encontrado')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setFinalizeError('As senhas não coincidem')
+      return
+    }
+
+    if (password.length < 6) {
+      setFinalizeError('A senha deve ter pelo menos 6 caracteres')
+      return
+    }
+
+    setIsFinalizing(true)
+    setFinalizeError('')
+
     try {
-      // Tentar fazer login automático
-      const result = await signIn('credentials', {
-        email: userEmail,
-        password: '', // A senha será fornecida pelo usuário
-        redirect: false,
+      const response = await fetch('/api/premium/finalize-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: pixData.userId,
+          password: password,
+          confirmPassword: confirmPassword
+        }),
       })
 
-      if (result?.ok) {
-        // Redirecionar para a página principal
-        router.push('/')
+      const data = await response.json()
+
+      if (data.success) {
+        // Login automático após finalização
+        const result = await signIn('credentials', {
+          email: userEmail,
+          password: password,
+          redirect: false,
+        })
+
+        if (result?.ok) {
+          router.push('/')
+        } else {
+          // Se não conseguir fazer login, mostrar mensagem de sucesso
+          alert('Conta finalizada com sucesso! Verifique seu email para as credenciais.')
+          onClose()
+        }
       } else {
-        // Se não conseguir fazer login automático, mostrar mensagem de sucesso
-        // O usuário receberá o email com os dados de acesso
-        console.log('Pagamento confirmado, mas login automático não foi possível')
+        setFinalizeError(data.error || 'Erro ao finalizar conta')
       }
     } catch (error) {
-      console.error('Erro no login automático:', error)
+      console.error('Erro ao finalizar conta:', error)
+      setFinalizeError('Erro interno do servidor')
+    } finally {
+      setIsFinalizing(false)
     }
   }
 
@@ -141,10 +187,10 @@ export default function PixPaymentWithAutoCheck({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 
-  if (paymentConfirmed) {
+  if (paymentConfirmed && showPasswordForm) {
     return (
       <div className="max-w-sm mx-auto p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
-        <div className="text-center">
+        <div className="text-center mb-6">
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
@@ -154,26 +200,68 @@ export default function PixPaymentWithAutoCheck({
           </h3>
           
           <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-            Seu pagamento foi processado com sucesso!
+            Agora defina sua senha para finalizar a criação da conta
           </p>
-          
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
-            <p className="text-blue-800 dark:text-blue-200 text-xs font-medium mb-2">
-              📧 Verifique seu email para receber:
-            </p>
-            <ul className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
-              <li>• Sua senha de acesso</li>
-              <li>• Links do canal do Telegram</li>
-            </ul>
-          </div>
-          
-          <button
-            onClick={onClose}
-            className="w-full bg-green-600 text-white font-medium py-3 rounded-lg hover:bg-green-700 transition"
-          >
-            Fechar
-          </button>
         </div>
+
+        <form onSubmit={handleFinalizeAccount} className="space-y-4">
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
+              Senha
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-red-500"
+              placeholder="Digite sua senha"
+              required
+              minLength={6}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
+              Confirmar Senha
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-red-500"
+              placeholder="Confirme sua senha"
+              required
+              minLength={6}
+            />
+          </div>
+
+          {finalizeError && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <p className="text-red-800 dark:text-red-200 text-sm">{finalizeError}</p>
+            </div>
+          )}
+
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <p className="text-blue-800 dark:text-blue-200 text-xs">
+              📧 Após finalizar, você receberá um email com suas credenciais e links do Telegram
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isFinalizing}
+            className="w-full bg-green-600 text-white font-medium py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isFinalizing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Finalizando...
+              </>
+            ) : (
+              'Finalizar Conta'
+            )}
+          </button>
+        </form>
       </div>
     )
   }
