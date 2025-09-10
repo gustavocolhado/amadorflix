@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     const testEmailData = {
       userEmail: testEmail,
       userName: 'Usuário Teste',
+      userPassword: 'senha123',
       planName: 'Plano Mensal (1 mês)',
       planDuration: '30 dias',
       expireDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),

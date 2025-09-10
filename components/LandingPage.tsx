@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { FaFire, FaPlay, FaEye, FaHeart, FaClock, FaUsers, FaVideo, FaSearch, FaCrown, FaTags, FaThLarge, FaComments, FaUpload, FaPlus, FaUserCircle, FaCheck, FaArrowRight, FaCopy, FaSpinner, FaTimes, FaUnlock, FaShieldAlt, FaMobile, FaCalendarAlt, FaHeadphones, FaChevronLeft, FaChevronRight, FaLock } from 'react-icons/fa';
 import Image from 'next/image';
 import Container from '@/components/Container';
+import PixPaymentWithAutoCheck from './PixPaymentWithAutoCheck';
 
 
 interface Plan {
@@ -145,7 +146,7 @@ export default function LandingPage() {
     {
       id: 'annual',
       title: '1 ANO DE ACESSO',
-      price: 4990, // R$ 39,90 em centavos
+      price: 100, // R$ 39,90 em centavos
       description: 'Pague via pix',
       popular: false
     },
@@ -1165,92 +1166,15 @@ export default function LandingPage() {
                   </form>
                 </div>
               ) : showPixPayment && pixData ? (
-                // Tela de pagamento PIX
-                <div>
-                  <div className="text-center mb-6">
-                    <h1 className="text-2xl font-bold text-white mb-2">Quase lá...</h1>
-                    <p className="text-white text-sm">
-                      Pague seu Pix dentro de {formatTime(timeLeft)} para liberar seu acesso.
-                    </p>
-                  </div>
-
-                  {/* Barra de status */}
-                  <div className="bg-yellow-100 rounded-lg p-3 mb-6">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-neutral-800 text-sm">Aguardando pagamento</span>
-                      <FaSpinner className="text-blue-500 animate-spin" />
-                    </div>
-                  </div>
-
-                  <div className="text-center mb-6">
-                    <p className="text-white text-sm">Valor do Pix: {formatPrice(pixData.value)}</p>
-                  </div>
-
-                  {/* QR Code */}
-                  <div className="flex justify-center mb-6">
-                    <div className="bg-white p-4 rounded-lg">
-                      <img 
-                        src={pixData.qr_code_base64} 
-                        alt="QR Code PIX" 
-                        className="w-48 h-48"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Botão copiar código */}
-                  <button
-                    onClick={copyPixCode}
-                    className="w-full bg-green-600 text-white font-bold py-3 rounded-lg mb-4 flex items-center justify-center gap-2 hover:bg-green-700 transition"
-                  >
-                    <FaCopy />
-                    {copied ? 'Código copiado!' : 'Copiar código Pix'}
-                  </button>
-
-                  {/* Botão verificar pagamento */}
-                  <button
-                    onClick={checkPaymentStatus}
-                    disabled={isCheckingPayment}
-                    className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg mb-6 flex items-center justify-center gap-2 hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isCheckingPayment ? (
-                      <>
-                        <FaSpinner className="animate-spin" />
-                        Verificando pagamento...
-                      </>
-                    ) : (
-                      <>
-                        <FaCheck />
-                        Já fiz o pagamento
-                      </>
-                    )}
-                  </button>
-
-                  {/* Instruções */}
-                  <div className="text-white text-sm mb-6 space-y-2">
-                    <p>Após copiar o código, abra seu aplicativo de pagamento onde você utiliza o Pix.</p>
-                    <p>Escolha a opção Pix Copia e Cola e insira o código copiado</p>
-                  </div>
-
-                  {/* Badge de segurança */}
-                  <div className="flex items-center justify-center gap-2 mb-6">
-                    <FaCheck className="text-green-500" />
-                    <span className="text-white text-sm font-medium">COMPRA 100% SEGURA</span>
-                  </div>
-
-                  <hr className="border-neutral-700 mb-6" />
-
-                  {/* Footer */}
-                  <div className="text-center text-white text-xs space-y-1">
-                    <p>Pix processado por: PUSHIN PAY</p>
-                    <p>Constará no seu extrato da sua conta bancária o nome PUSHIN PAY.</p>
-                  </div>
-
-                  <div className="text-neutral-500 text-xs mt-4 text-center">
-                    Esta compra será processada pela PUSHIN PAY © 2025 - Todos os direitos reservados. 
-                    Sua compra de acesso será processada com segurança e discrição por PUSHIN PAY. 
-                    Se você encontrar algum problema durante o processo de compra, favor contatar Apoio ao Cliente.
-                  </div>
-                </div>
+                // Tela de pagamento PIX com verificação automática
+                <PixPaymentWithAutoCheck
+                  pixData={pixData}
+                  userEmail={email}
+                  onClose={() => {
+                    setShowPixPayment(false);
+                    setPixData(null);
+                  }}
+                />
               ) : (
                 // Formulário de email
                 <div>

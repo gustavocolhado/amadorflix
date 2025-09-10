@@ -171,6 +171,15 @@ export async function POST(request: NextRequest) {
 
     const pixData: PushinPayResponse = await pushinPayResponse.json();
 
+    // Log da resposta da PushinPay
+    console.log('✅ PIX criado pela PushinPay:', {
+      id: pixData.id,
+      status: pixData.status,
+      value: pixData.value,
+      hasQrCode: !!pixData.qr_code,
+      hasQrCodeBase64: !!pixData.qr_code_base64
+    });
+
     // Verificar se usuário existe (não criar automaticamente)
     const existingUser = await checkUserExists(email);
 
@@ -235,6 +244,7 @@ export async function POST(request: NextRequest) {
         currentUrl: referralData.currentUrl
       } : 'sem dados de referência'
     });
+
 
     // Retornar dados do PIX para o frontend
     return NextResponse.json({

@@ -110,6 +110,7 @@ async function activatePremiumAccessViaWebhook(pixId: string, statusData: Webhoo
       const emailData: PaymentConfirmationEmailData = {
         userEmail: pixPayment.userEmail,
         userName: pixPayment.user?.name || 'Usuário',
+        userPassword: pixPayment.user?.password || 'Sua senha foi definida durante o cadastro',
         planName: getPlanName(pixPayment.planId),
         planDuration: `${getPlanDurationInDays(pixPayment.planId)} dias`,
         expireDate: formatDate(expireDate),

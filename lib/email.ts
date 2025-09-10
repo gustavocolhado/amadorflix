@@ -17,6 +17,7 @@ const createTransporter = () => {
 export interface PaymentConfirmationEmailData {
   userEmail: string
   userName: string
+  userPassword: string
   planName: string
   planDuration: string
   expireDate: string
@@ -188,6 +189,10 @@ const createEmailTemplate = (data: PaymentConfirmationEmailData): string => {
                 <span class="info-label">Email:</span>
                 <span class="info-value">${data.userEmail}</span>
             </div>
+            <div class="info-item">
+                <span class="info-label">Senha:</span>
+                <span class="info-value"><strong>${data.userPassword}</strong></span>
+            </div>
         </div>
 
         <div class="telegram-section">
@@ -250,6 +255,7 @@ Detalhes da Assinatura:
 - Duração: ${data.planDuration}
 - Válido até: ${data.expireDate}
 - Email: ${data.userEmail}
+- Senha: ${data.userPassword}
 
 Acesse nosso canal exclusivo no Telegram:
 - Canal: ${data.telegramChannel}

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import FloatingSupportButton from '@/components/FloatingSupportButton'
 
 export const metadata: Metadata = {
   title: 'Amador Flix',
@@ -33,6 +34,7 @@ export default function RootLayout({
         <ErrorBoundary>
           <Providers>
             {children}
+            <FloatingSupportButton />
           </Providers>
         </ErrorBoundary>
       </body>
