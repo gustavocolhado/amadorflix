@@ -146,7 +146,7 @@ export default function LandingPage() {
     {
       id: 'annual',
       title: '1 ANO DE ACESSO',
-      price: 100, // R$ 39,90 em centavos
+      price: 4990, // R$ 39,90 em centavos
       description: 'Pague via pix',
       popular: false
     },
