@@ -66,7 +66,7 @@ export default function Home() {
                 {/* Botão de Acesso */}
                 <div className="text-center mb-4">
                   <a 
-                    href="https://t.me/vazadexvipbot" 
+                    href="https://t.me/+LW-aIswOrDRhZGFh" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-bold transition-colors duration-300"

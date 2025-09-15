@@ -223,8 +223,8 @@ export default function VideoCard({
             {creatorId && (
               <button
                 onClick={handleCreatorClick}
-                className="flex items-center gap-1 text-sm text-accent-red hover:text-accent-red-dark transition-colors"
-                title="Ver criador"
+                className="flex items-center gap-1 text-xs bg-accent-red text-white px-2 py-1 rounded-full hover:bg-accent-red-dark transition-colors"
+                title="Ver todos os vídeos do criador"
               >
                 <User className="w-3 h-3" />
                 <span>Ver criador</span>

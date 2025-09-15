@@ -26,6 +26,16 @@ export async function GET(
 
     console.log('✅ Vídeo encontrado:', video.title)
 
+    // Buscar creatorId se houver creator
+    let creatorId = null
+    if (video.creator) {
+      const creatorRecord = await prismaVideos.creator.findUnique({
+        where: { name: video.creator },
+        select: { id: true }
+      })
+      creatorId = creatorRecord?.id || null
+    }
+
     // Formatar dados para a resposta (versão simplificada)
     const formattedVideo = {
       id: video.id,
@@ -42,6 +52,7 @@ export async function GET(
       dislikesCount: 0,
       category: video.category || [],
       creator: video.creator || 'Desconhecido',
+      creatorId: creatorId,
       uploader: null,
       uploadTime: video.created_at ? new Date(video.created_at).toLocaleDateString('pt-BR') : 'Data desconhecida',
       description: video.description || '',

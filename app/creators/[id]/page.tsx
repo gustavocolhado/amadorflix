@@ -221,6 +221,7 @@ export default function CreatorPage() {
                     likesCount={video.likesCount}
                     category={video.category}
                     creator={video.creator || undefined}
+                    creatorId={creatorId}
                   />
                 ))}
               </div>

@@ -476,6 +476,7 @@ export default function ProfilePage() {
                       likesCount={video.likesCount}
                       category={video.category}
                       creator={video.creator || undefined}
+                      creatorId={video.creatorId || undefined}
                     />
                   ))}
                 </div>
@@ -518,6 +519,7 @@ export default function ProfilePage() {
                       likesCount={video.likesCount}
                       category={video.category}
                       creator={video.creator || undefined}
+                      creatorId={video.creatorId || undefined}
                     />
                   ))}
                 </div>
@@ -560,6 +562,7 @@ export default function ProfilePage() {
                       likesCount={video.likesCount}
                       category={video.category}
                       creator={video.creator || undefined}
+                      creatorId={video.creatorId || undefined}
                     />
                   ))}
                 </div>

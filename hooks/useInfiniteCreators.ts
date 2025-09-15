@@ -30,6 +30,11 @@ export function useInfiniteCreators() {
       
       const data: CreatorsResponse = await response.json()
       
+      // Verificar se os dados estão no formato esperado
+      if (!data.creators || !data.pagination) {
+        throw new Error('Formato de resposta inválido da API')
+      }
+      
       if (append) {
         setCreators(prev => [...prev, ...data.creators])
       } else {

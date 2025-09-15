@@ -6,6 +6,7 @@ interface RelatedVideo {
   thumbnailUrl: string
   duration: string
   creator: string
+  creatorId?: string | null
   viewCount: number
   uploadTime: string
 }

@@ -45,8 +45,26 @@ export async function GET() {
       }
     })
 
-    // Extrair apenas os vídeos da resposta
-    const videos = favoriteVideos.map(favorite => favorite.video)
+    // Extrair apenas os vídeos da resposta e adicionar creatorId
+    const videos = await Promise.all(
+      favoriteVideos.map(async (favorite) => {
+        const video = favorite.video
+        let creatorId = null
+        
+        if (video.creator) {
+          const creatorRecord = await prismaVideos.creator.findUnique({
+            where: { name: video.creator },
+            select: { id: true }
+          })
+          creatorId = creatorRecord?.id || null
+        }
+        
+        return {
+          ...video,
+          creatorId: creatorId
+        }
+      })
+    )
 
     return NextResponse.json(videos)
   } catch (error) {

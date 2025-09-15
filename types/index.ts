@@ -23,6 +23,7 @@ export interface Video {
   trailerUrl?: string | null
   category?: string[]
   creator: string | null
+  creatorId?: string | null
   created_at: string | null
 }
 

@@ -256,6 +256,7 @@ export default function VideosPage() {
                     likesCount={video.likesCount}
                     category={video.category}
                     creator={video.creator || undefined}
+                    creatorId={video.creatorId || undefined}
                     onClick={handleVideoClick}
                   />
                 ))}

@@ -70,6 +70,27 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Para cada vídeo, buscar o creatorId se houver creator
+    const videosWithCreatorId = await Promise.all(
+      videos.map(async (video) => {
+        if (video.creator) {
+          const creatorRecord = await prismaVideos.creator.findUnique({
+            where: { name: video.creator },
+            select: { id: true }
+          })
+          
+          return {
+            ...video,
+            creatorId: creatorRecord?.id || null
+          }
+        }
+        return {
+          ...video,
+          creatorId: null
+        }
+      })
+    )
+
     // Contar total de vídeos
     const total = await prismaVideos.video.count({
       where: whereClause
@@ -78,7 +99,7 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(total / limit)
 
     return NextResponse.json({
-      videos,
+      videos: videosWithCreatorId,
       pagination: {
         page,
         limit,

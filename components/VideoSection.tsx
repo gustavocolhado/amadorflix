@@ -129,6 +129,7 @@ export default function VideoSection() {
             likesCount={video.likesCount}
             category={video.category}
             creator={video.creator || undefined}
+            creatorId={video.creatorId || undefined}
             onClick={handleVideoClick}
           />
         ))}

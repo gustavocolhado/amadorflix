@@ -104,15 +104,29 @@ export async function GET(
       })
     }
 
-    // Transformar created_at em uploadTime formatado
-    const videosWithFormattedTime = relatedVideos.map(video => ({
-      ...video,
-      uploadTime: formatRelativeTime(video.created_at)
-    }))
+    // Para cada vídeo, buscar o creatorId se houver creator
+    const videosWithCreatorId = await Promise.all(
+      relatedVideos.map(async (video) => {
+        let creatorId = null
+        if (video.creator) {
+          const creatorRecord = await prismaVideos.creator.findUnique({
+            where: { name: video.creator },
+            select: { id: true }
+          })
+          creatorId = creatorRecord?.id || null
+        }
+        
+        return {
+          ...video,
+          creatorId: creatorId,
+          uploadTime: formatRelativeTime(video.created_at)
+        }
+      })
+    )
 
     return NextResponse.json({
-      videos: videosWithFormattedTime,
-      total: videosWithFormattedTime.length
+      videos: videosWithCreatorId,
+      total: videosWithCreatorId.length
     })
 
   } catch (error) {

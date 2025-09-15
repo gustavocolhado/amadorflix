@@ -5,6 +5,7 @@ import Layout from '@/components/Layout'
 import Header from '@/components/Header'
 import Section from '@/components/Section'
 import InfiniteScrollTrigger from '@/components/InfiniteScrollTrigger'
+import CreatorAvatar from '@/components/CreatorAvatar'
 import { Search, Users } from 'lucide-react'
 import { useInfiniteCreators } from '@/hooks/useInfiniteCreators'
 import { Creator } from '@/types'
@@ -138,13 +139,10 @@ export default function CreatorsPage() {
                      <div className="p-4 flex items-center gap-3">
                        {/* Avatar do criador */}
                        <div className="flex-shrink-0">
-                         <img
-                           src={creator.image || '/creators/default-creator.jpg'}
-                           alt={creator.name}
-                           className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                           onError={(e) => {
-                             e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNGM0Y0RjYiLz4KPHBhdGggZD0iTTI0IDI0QzI4LjQxODMgMjQgMzIgMjAuNDE4MyAzMiAxNkMzMiAxMS41ODE3IDI4LjQxODMgOCAyNCA4QzE5LjU4MTcgOCAxNiAxMS41ODE3IDE2IDE2QzE2IDIwLjQxODMgMTkuNTgxNyAyNCAyNCAyNFoiIGZpbGw9IiNEMUQ1REIiLz4KPHBhdGggZD0iTTQwIDQwQzQwIDMyLjI2ODAxIDMyLjgzNiAyNiAyNCAyNkMxNS4xNjQgMjYgOCAzMi4yNjgwMSA4IDQwIiBmaWxsPSIjRDFENURCIi8+Cjwvc3ZnPgo='
-                           }}
+                         <CreatorAvatar 
+                           creator={creator} 
+                           size="md" 
+                           className="border-2 border-gray-200"
                          />
                        </div>
                        

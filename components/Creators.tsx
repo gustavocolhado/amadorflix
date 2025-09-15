@@ -1,6 +1,7 @@
 import Section from './Section'
 import { Eye } from 'lucide-react'
 import { useCreators } from '@/hooks/useCreators'
+import CreatorAvatar from './CreatorAvatar'
 
 export default function Creators() {
   const { creators, loading, error } = useCreators()
@@ -82,14 +83,10 @@ export default function Creators() {
             onClick={() => handleCreatorClick(creator)}
             className="flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-colors theme-tag-secondary hover:theme-tag-primary"
           >
-            <img
-              src={creator.image || '/creators/default-creator.jpg'}
-              alt={creator.name}
-              className="w-4 h-4 md:w-5 md:h-5 rounded-full object-cover flex-shrink-0"
-              onError={(e) => {
-                // Fallback para placeholder se a imagem não carregar
-                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNGM0Y0RjYiLz4KPHBhdGggZD0iTTI0IDI0QzI4LjQxODMgMjQgMzIgMjAuNDE4MyAzMiAxNkMzMiAxMS41ODE3IDI4LjQxODMgOCAyNCA4QzE5LjU4MTcgOCAxNiAxMS41ODE3IDE2IDE2QzE2IDIwLjQxODMgMTkuNTgxNyAyNCAyNCAyNFoiIGZpbGw9IiNEMUQ1REIiLz4KPHBhdGggZD0iTTQwIDQwQzQwIDMyLjI2ODAxIDMyLjgzNiAyNiAyNCAyNkMxNS4xNjQgMjYgOCAzMi4yNjgwMSA4IDQwIiBmaWxsPSIjRDFENURCIi8+Cjwvc3ZnPgo='
-              }}
+            <CreatorAvatar 
+              creator={creator} 
+              size="sm" 
+              className="w-4 h-4 md:w-5 md:h-5"
             />
             <span className="truncate max-w-20 md:max-w-none">{creator.name}</span>
             <span className="bg-accent-red text-white text-xs rounded-full px-1 md:px-1.5 py-0.5 flex-shrink-0">
