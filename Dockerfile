@@ -1,7 +1,9 @@
 # Dockerfile para Vazadex - Otimizado para Coolify
-FROM node:18-alpine AS base
 
-# Instalar dependências necessárias
+# Estágio de build
+FROM node:18-alpine AS builder
+
+# Instalar dependências necessárias para o build
 RUN apk add --no-cache libc6-compat openssl
 
 # Definir diretório de trabalho
@@ -22,9 +24,42 @@ RUN npx prisma generate && npx prisma generate --schema=./prisma/schema-videos.p
 # Build da aplicação
 RUN npm run build
 
-# Remover devDependencies e cache
-RUN npm prune --production
-RUN rm -rf .next/cache
+# Estágio de produção
+FROM node:18-alpine AS runner
+
+# Instalar dependências necessárias para o runtime
+RUN apk add --no-cache libc6-compat openssl
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Copiar apenas as dependências de produção
+COPY --from=builder /app/package.json /app/package-lock.json* ./
+RUN npm ci --omit=dev
+
+# Copiar os artefatos de build
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/components ./components
+COPY --from=builder /app/config ./config
+COPY --from=builder /app/contexts ./contexts
+COPY --from=builder /app/docs ./docs
+COPY --from=builder /app/hooks ./hooks
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/types ./types
+COPY --from=builder /app/utils ./utils
+COPY --from=builder /app/middleware.ts ./middleware.ts
+COPY --from=builder /app/next.config.js ./next.config.js
+COPY --from=builder /app/postcss.config.js ./postcss.config.js
+COPY --from=builder /app/tailwind.config.js ./tailwind.config.js
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/.env.example ./.env.example
+COPY --from=builder /app/.gitignore ./.gitignore
+COPY --from=builder /app/README.md ./README.md
 
 # Expor porta
 EXPOSE 3000
@@ -34,4 +69,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Comando para iniciar a aplicação
-CMD ["npm", "start"] 
+CMD ["npm", "start"]
